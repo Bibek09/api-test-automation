@@ -1,0 +1,71 @@
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.support.ui.WebDriverWait;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import java.time.Duration;
+
+public class SeleniumReactPageLoad {
+    public static void main(String[] args) {
+        // Set up ChromeDriver (ensure chromedriver is in your PATH or specify the path)
+        System.setProperty("webdriver.chrome.driver", "path/to/chromedriver.exe");
+        
+        // Initialize WebDriver
+        WebDriver driver = new ChromeDriver();
+        
+        try {
+            // Navigate to the React webpage
+            driver.get("https://your-react-app.com"); // Replace with your React app URL
+            
+            // Maximize the browser window
+            driver.manage().window().maximize();
+            
+            // Wait until the React page is fully loaded
+            waitForReactPageLoad(driver);
+            
+            // Example: Find and interact with an element after page load
+            WebElement mainElement = driver.findElement(By.id("main-content")); // Replace with your element
+            System.out.println("React page loaded successfully! Element found: " + mainElement.getText());
+            
+            // Perform additional actions here
+            mainElement.click(); // Or any other action
+            
+        } catch (Exception e) {
+            System.err.println("Error waiting for React page load: " + e.getMessage());
+        } finally {
+            // Close the browser
+            driver.quit();
+        }
+    }
+    
+    /**
+     * Waits until a React page is fully loaded by checking for specific conditions
+     * @param driver The WebDriver instance
+     */
+    public static void waitForReactPageLoad(WebDriver driver) {
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(30));
+        
+        try {
+            // Wait for loading spinner (if present) to disappear
+            By loadingSpinner = By.className("loading-spinner"); // Replace with your spinner's locator
+            wait.until(ExpectedConditions.invisibilityOfElementLocated(loadingSpinner));
+            
+            // Wait for a key React component or content to be visible
+            By mainContent = By.id("main-content"); // Replace with a key element on your React page
+            wait.until(ExpectedConditions.visibilityOfElementLocated(mainContent));
+            
+            // Optionally, wait for JavaScript to complete (React often uses JS for rendering)
+            wait.until(driver -> {
+                Object result = ((JavascriptExecutor) driver).executeScript("return document.readyState");
+                return "complete".equals(result);
+            });
+            
+            System.out.println("React page fully loaded!");
+            
+        } catch (Exception e) {
+            System.err.println("Timeout or error waiting for React page load: " + e.getMessage());
+            throw new RuntimeException("React page failed to load within timeout", e);
+        }
+    }
+}
