@@ -1,0 +1,100 @@
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.NoSuchElementException;
+import java.time.Duration;
+import java.util.concurrent.TimeUnit;
+
+public class SeleniumReusableElementLoop {
+    public static void main(String[] args) {
+        // Set up ChromeDriver (ensure chromedriver is in your PATH or specify the path)
+        System.setProperty("webdriver.chrome.driver", "path/to/chromedriver.exe");
+        
+        // Initialize WebDriver
+        WebDriver driver = new ChromeDriver();
+        
+        try {
+            // Navigate to the webpage
+            driver.get("https://example.com"); // Replace with your target URL
+            
+            // Maximize the browser window
+            driver.manage().window().maximize();
+            
+            // Set implicit wait (optional, for general element finding)
+            driver.manage().timeouts().implicitlyWait(5, TimeUnit.SECONDS);
+            
+            // Example 1: Search for an element with ID "targetElement1"
+            By locator1 = By.id("targetElement1");
+            WebElement element1 = findElementUntilFound(driver, locator1, 30);
+            if (element1 != null) {
+                element1.click(); // Perform action on found element
+                System.out.println("Element 1 found and clicked: " + element1.getText());
+            }
+            
+            // Example 2: Search for an element with class "targetElement2"
+            By locator2 = By.className("targetElement2");
+            WebElement element2 = findElementUntilFound(driver, locator2, 30);
+            if (element2 != null) {
+                element2.sendKeys("Input text"); // Perform action on found element
+                System.out.println("Element 2 found and interacted with: " + element2.getText());
+            }
+            
+        } catch (Exception e) {
+            System.err.println("Error during element search: " + e.getMessage());
+        } finally {
+            // Close the browser
+            driver.quit();
+        }
+    }
+    
+    /**
+     * Reusable function to find an element on the page until it's found or timeout is reached
+     * @param driver The WebDriver instance
+     * @param locator The By locator for the element to find
+     * @param maxWaitSeconds Maximum time to wait in seconds
+     * @return WebElement if found, null if not found within timeout
+     */
+    public static WebElement findElementUntilFound(WebDriver driver, By locator, int maxWaitSeconds) {
+        // Flag to track if element is found
+        boolean elementFound = false;
+        
+        // Maximum time to loop (convert seconds to milliseconds)
+        long maxWaitTime = System.currentTimeMillis() + (maxWaitSeconds * 1000); // e.g., 30 seconds
+        
+        // Loop until element is found or timeout is reached
+        while (!elementFound && System.currentTimeMillis() < maxWaitTime) {
+            try {
+                // Attempt to find the element
+                WebElement element = driver.findElement(locator);
+                
+                if (element != null && element.isDisplayed()) {
+                    elementFound = true;
+                    System.out.println("Element found with locator: " + locator);
+                    return element; // Return the found element and exit
+                }
+            } catch (NoSuchElementException e) {
+                // Element not found yet, wait briefly before retrying
+                try {
+                    Thread.sleep(1000); // Wait 1 second before next attempt
+                } catch (InterruptedException ie) {
+                    System.err.println("Sleep interrupted: " + ie.getMessage());
+                }
+                System.out.println("Element not found yet, retrying...");
+            }
+        }
+        
+        System.out.println("Element not found within " + maxWaitSeconds + " seconds!");
+        return null; // Return null if element not found within timeout
+    }
+}
+
+
+usage:
+// In another class or method, you can call:
+By buttonLocator = By.id("submitButton");
+WebElement button = findElementUntilFound(driver, buttonLocator, 20);
+if (button != null) {
+    button.click();
+    System.out.println("Button clicked successfully!");
+}
