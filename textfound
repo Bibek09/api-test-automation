@@ -1,0 +1,74 @@
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.support.ui.WebDriverWait;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import java.time.Duration;
+
+public class SeleniumTextWait {
+    public static void main(String[] args) {
+        // Set up ChromeDriver (ensure chromedriver is in your PATH or specify the path)
+        System.setProperty("webdriver.chrome.driver", "path/to/chromedriver.exe");
+        
+        // Initialize WebDriver
+        WebDriver driver = new ChromeDriver();
+        
+        try {
+            // Navigate to the webpage
+            driver.get("https://example.com"); // Replace with your target URL
+            
+            // Maximize the browser window
+            driver.manage().window().maximize();
+            
+            // Example: Check if "Welcome" text appears on the page
+            String targetText = "Welcome";
+            boolean textFound = waitForTextToAppear(driver, targetText, 30);
+            
+            if (textFound) {
+                System.out.println("Text '" + targetText + "' found on the page!");
+            } else {
+                System.out.println("Text '" + targetText + "' not found within 30 seconds!");
+            }
+            
+        } catch (Exception e) {
+            System.err.println("Error checking for text: " + e.getMessage());
+        } finally {
+            // Close the browser
+            driver.quit();
+        }
+    }
+    
+    /**
+     * Waits until the specified text appears on the page, with a maximum wait time
+     * @param driver The WebDriver instance
+     * @param text The text to search for
+     * @param maxWaitSeconds Maximum time to wait in seconds (default 30)
+     * @return boolean True if text is found within timeout, false otherwise
+     */
+    public static boolean waitForTextToAppear(WebDriver driver, String text, int maxWaitSeconds) {
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(maxWaitSeconds));
+        
+        try {
+            // Wait until an element containing the specified text is visible
+            wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.xpath("//*[contains(text(), '" + text + "')]")
+            ));
+            
+            // Alternatively, you can search the entire page source for the text
+            /*
+            wait.until(driver -> {
+                String pageSource = driver.getPageSource();
+                return pageSource.contains(text);
+            });
+            */
+            
+            System.out.println("Text '" + text + "' found on the page!");
+            return true;
+            
+        } catch (Exception e) {
+            System.err.println("Text '" + text + "' not found within " + maxWaitSeconds + " seconds: " + e.getMessage());
+            return false;
+        }
+    }
+}
