@@ -1,3 +1,14 @@
+Troubleshooting Tips:
+Verify Frame Exists: Use browser dev tools (F12) to inspect iframes
+Check Timing: Add a small delay before switching if frames load slowly
+Nested Frames: If nested, switch to parent frames first
+
+Troubleshot:
+java.util.List<WebElement> frames = driver.findElements(By.tagName("iframe"));
+frames.forEach(f -> System.out.println(f.getAttribute("id") + " " + f.getAttribute("name")));
+
+
+
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
