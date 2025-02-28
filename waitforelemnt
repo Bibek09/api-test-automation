@@ -1,0 +1,116 @@
+waitforelement
+
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+import java.time.Duration;
+import org.openqa.selenium.TimeoutException;
+
+public class SeleniumWaitExample {
+    
+    public static WebElement waitForElement(WebDriver driver, String locatorType, String locatorValue, int timeout) {
+        /*
+         * Waits for an element to be present, visible, and clickable
+         * 
+         * Parameters:
+         * driver - WebDriver instance
+         * locatorType - Type of locator (e.g., "id", "xpath", "css", "class")
+         * locatorValue - The locator value to find the element
+         * timeout - Maximum wait time in seconds
+         * 
+         * Returns:
+         * WebElement if found, null if timeout occurs
+         */
+        try {
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(timeout));
+            By byLocator;
+            
+            // Convert locator type to By locator
+            switch (locatorType.toLowerCase()) {
+                case "id":
+                    byLocator = By.id(locatorValue);
+                    break;
+                case "xpath":
+                    byLocator = By.xpath(locatorValue);
+                    break;
+                case "css":
+                    byLocator = By.cssSelector(locatorValue);
+                    break;
+                case "class":
+                    byLocator = By.className(locatorValue);
+                    break;
+                case "name":
+                    byLocator = By.name(locatorValue);
+                    break;
+                case "tag":
+                    byLocator = By.tagName(locatorValue);
+                    break;
+                case "link":
+                    byLocator = By.linkText(locatorValue);
+                    break;
+                case "partial_link":
+                    byLocator = By.partialLinkText(locatorValue);
+                    break;
+                default:
+                    throw new IllegalArgumentException(
+                        "Invalid locator type. Supported types: id, xpath, css, class, name, tag, link, partial_link"
+                    );
+            }
+            
+            // Wait for element to be clickable
+            return wait.until(ExpectedConditions.elementToBeClickable(byLocator));
+            
+        } catch (TimeoutException e) {
+            System.out.printf("Element with %s='%s' not found or not clickable within %d seconds%n", 
+                locatorType, locatorValue, timeout);
+            return null;
+        } catch (Exception e) {
+            System.out.println("An error occurred: " + e.getMessage());
+            return null;
+        }
+    }
+
+    public static void main(String[] args) {
+        // Set up Chrome options
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--start-maximized");
+        
+        // Initialize the WebDriver
+        WebDriver driver = new ChromeDriver(options);
+        
+        try {
+            // Navigate to a webpage
+            driver.get("https://example.com");
+            
+            // Example usage with different locators
+            
+            // Using ID locator
+            WebElement buttonById = waitForElement(driver, "id", "submit-button", 45);
+            if (buttonById != null) {
+                buttonById.click();
+            }
+            
+            // Using XPath locator
+            WebElement linkByXpath = waitForElement(driver, "xpath", "//a[@class='login']", 45);
+            if (linkByXpath != null) {
+                linkByXpath.click();
+            }
+            
+            // Using CSS selector
+            WebElement inputByCss = waitForElement(driver, "css", ".form-input", 45);
+            if (inputByCss != null) {
+                inputByCss.sendKeys("test input");
+            }
+            
+        } catch (Exception e) {
+            System.out.println("Test execution failed: " + e.getMessage());
+        } finally {
+            // Clean up
+            driver.quit();
+        }
+    }
+}
