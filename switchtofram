@@ -1,0 +1,177 @@
+import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+import java.time.Duration;
+import org.openqa.selenium.NoSuchFrameException;
+import org.openqa.selenium.TimeoutException;
+
+public class FrameSwitchHandler {
+    
+    private WebDriver driver;
+    private WebDriverWait wait;
+    private JavascriptExecutor jsExecutor;
+    private static final int TIMEOUT = 45; // seconds
+    
+    public FrameSwitchHandler() {
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--start-maximized");
+        driver = new ChromeDriver(options);
+        wait = new WebDriverWait(driver, Duration.ofSeconds(TIMEOUT));
+        jsExecutor = (JavascriptExecutor) driver;
+    }
+    
+    /**
+     * Attempts to switch to a frame using multiple strategies
+     * @param frameIdentifier Can be frame index (int), name/id (String), or WebElement
+     * @return true if switch successful, false otherwise
+     */
+    public boolean switchToFrame(Object frameIdentifier) {
+        try {
+            // Reset to default content first
+            driver.switchTo().defaultContent();
+            
+            // Strategy 1: Standard switchTo().frame()
+            if (tryStandardSwitch(frameIdentifier)) {
+                return true;
+            }
+            
+            // Strategy 2: JavaScript-based switch
+            if (tryJavaScriptSwitch(frameIdentifier)) {
+                return true;
+            }
+            
+            // Strategy 3: Search all frames and switch
+            return tryFrameSearchSwitch(frameIdentifier);
+            
+        } catch (Exception e) {
+            System.out.println("Failed to switch to frame: " + e.getMessage());
+            return false;
+        }
+    }
+    
+    private boolean tryStandardSwitch(Object frameIdentifier) {
+        try {
+            if (frameIdentifier instanceof Integer) {
+                wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt((Integer) frameIdentifier));
+            } else if (frameIdentifier instanceof String) {
+                wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt((String) frameIdentifier));
+            } else if (frameIdentifier instanceof WebElement) {
+                wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt((WebElement) frameIdentifier));
+            } else {
+                throw new IllegalArgumentException("Unsupported frame identifier type");
+            }
+            return true;
+        } catch (TimeoutException | NoSuchFrameException e) {
+            System.out.println("Standard switch failed: " + e.getMessage());
+            return false;
+        }
+    }
+    
+    private boolean tryJavaScriptSwitch(Object frameIdentifier) {
+        try {
+            String jsScript;
+            if (frameIdentifier instanceof Integer) {
+                jsScript = "window.frames[" + frameIdentifier + "].focus();";
+            } else if (frameIdentifier instanceof String) {
+                jsScript = "document.getElementsByName('" + frameIdentifier + "')[0].focus();" +
+                          "if (!document.getElementsByName('" + frameIdentifier + "')[0]) " +
+                          "document.getElementById('" + frameIdentifier + "').focus();";
+            } else if (frameIdentifier instanceof WebElement) {
+                jsScript = "arguments[0].focus();";
+                jsExecutor.executeScript(jsScript, frameIdentifier);
+                driver.switchTo().frame((WebElement) frameIdentifier);
+                return true;
+            } else {
+                return false;
+            }
+            
+            jsExecutor.executeScript(jsScript);
+            // After JS focus, try standard switch
+            if (frameIdentifier instanceof Integer) {
+                driver.switchTo().frame((int) frameIdentifier);
+            } else {
+                driver.switchTo().frame((String) frameIdentifier);
+            }
+            return true;
+            
+        } catch (Exception e) {
+            System.out.println("JavaScript switch failed: " + e.getMessage());
+            return false;
+        }
+    }
+    
+    private boolean tryFrameSearchSwitch(Object frameIdentifier) {
+        try {
+            // Get all iframe elements
+            java.util.List<WebElement> frames = driver.findElements(By.tagName("iframe"));
+            System.out.println("Found " + frames.size() + " frames");
+            
+            for (int i = 0; i < frames.size(); i++) {
+                try {
+                    driver.switchTo().defaultContent();
+                    driver.switchTo().frame(i);
+                    
+                    if (frameIdentifier instanceof String) {
+                        // Check if current frame matches name or id
+                        String frameName = frames.get(i).getAttribute("name");
+                        String frameId = frames.get(i).getAttribute("id");
+                        if (frameIdentifier.equals(frameName) || frameIdentifier.equals(frameId)) {
+                            return true;
+                        }
+                    }
+                    // Add more checks if needed for other identifier types
+                    
+                } catch (Exception e) {
+                    driver.switchTo().defaultContent();
+                    continue;
+                }
+            }
+            return false;
+            
+        } catch (Exception e) {
+            System.out.println("Frame search failed: " + e.getMessage());
+            return false;
+        }
+    }
+    
+    public void cleanup() {
+        if (driver != null) {
+            driver.quit();
+        }
+    }
+    
+    public static void main(String[] args) {
+        FrameSwitchHandler frameHandler = new FrameSwitchHandler();
+        
+        try {
+            frameHandler.driver.get("https://example.com/with-frames");
+            
+            // Example usage with different identifier types
+            boolean switched;
+            
+            // By index
+            switched = frameHandler.switchToFrame(0);
+            System.out.println("Frame switch by index: " + (switched ? "Success" : "Failed"));
+            
+            // Back to default content
+            frameHandler.driver.switchTo().defaultContent();
+            
+            // By name/id
+            switched = frameHandler.switchToFrame("frameName");
+            System.out.println("Frame switch by name: " + (switched ? "Success" : "Failed"));
+            
+            // By WebElement
+            WebElement frameElement = frameHandler.driver.findElement(By.cssSelector("#frameId"));
+            switched = frameHandler.switchToFrame(frameElement);
+            System.out.println("Frame switch by element: " + (switched ? "Success" : "Failed"));
+            
+        } finally {
+            frameHandler.cleanup();
+        }
+    }
+}  
