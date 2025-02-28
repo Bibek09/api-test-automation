@@ -1,0 +1,137 @@
+import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.support.ui.ExpectedCondition;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+import java.time.Duration;
+import org.openqa.selenium.TimeoutException;
+
+public class ReactPageWait {
+    
+    private WebDriver driver;
+    private WebDriverWait wait;
+    private static final int DEFAULT_TIMEOUT = 45; // seconds
+    
+    public ReactPageWait() {
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--start-maximized");
+        driver = new ChromeDriver(options);
+        wait = new WebDriverWait(driver, Duration.ofSeconds(DEFAULT_TIMEOUT));
+    }
+    
+    /**
+     * Waits for a React page to fully load by checking:
+     * 1. Document ready state
+     * 2. jQuery/React loading states (if present)
+     * 3. Specific element visibility and clickability
+     */
+    public boolean waitForReactPageLoad(String url, String keyElementLocatorType, String keyElementLocatorValue) {
+        try {
+            // Navigate to the page
+            driver.get(url);
+            
+            // Wait for JavaScript document.readyState to be 'complete'
+            wait.until((ExpectedCondition<Boolean>) driver -> 
+                ((JavascriptExecutor) driver)
+                    .executeScript("return document.readyState")
+                    .equals("complete")
+            );
+            
+            // Wait for jQuery to finish loading (if used in the React app)
+            wait.until((ExpectedCondition<Boolean>) driver -> {
+                try {
+                    return (Boolean) ((JavascriptExecutor) driver)
+                        .executeScript("return (typeof jQuery === 'undefined' || jQuery.active === 0)");
+                } catch (Exception e) {
+                    // jQuery not present, assume true
+                    return true;
+                }
+            });
+            
+            // Wait for React-specific loading to complete
+            wait.until((ExpectedCondition<Boolean>) driver -> {
+                try {
+                    // Check if React root element is rendered
+                    return (Boolean) ((JavascriptExecutor) driver)
+                        .executeScript("return (document.getElementById('root') !== null && " +
+                                      "document.getElementById('root').children.length > 0)");
+                } catch (Exception e) {
+                    return false;
+                }
+            });
+            
+            // Wait for specific key element to be visible and clickable
+            WebElement keyElement = waitForElement(keyElementLocatorType, keyElementLocatorValue);
+            return keyElement != null;
+            
+        } catch (TimeoutException e) {
+            System.out.println("React page failed to load within " + DEFAULT_TIMEOUT + " seconds");
+            return false;
+        } catch (Exception e) {
+            System.out.println("Error while waiting for React page: " + e.getMessage());
+            return false;
+        }
+    }
+    
+    private WebElement waitForElement(String locatorType, String locatorValue) {
+        try {
+            By byLocator;
+            switch (locatorType.toLowerCase()) {
+                case "id": byLocator = By.id(locatorValue); break;
+                case "xpath": byLocator = By.xpath(locatorValue); break;
+                case "css": byLocator = By.cssSelector(locatorValue); break;
+                case "class": byLocator = By.className(locatorValue); break;
+                case "name": byLocator = By.name(locatorValue); break;
+                case "tag": byLocator = By.tagName(locatorValue); break;
+                case "link": byLocator = By.linkText(locatorValue); break;
+                case "partial_link": byLocator = By.partialLinkText(locatorValue); break;
+                default:
+                    throw new IllegalArgumentException("Invalid locator type");
+            }
+            
+            return wait.until(ExpectedConditions.elementToBeClickable(byLocator));
+            
+        } catch (Exception e) {
+            System.out.printf("Element with %s='%s' not found or not clickable%n", 
+                locatorType, locatorValue);
+            return null;
+        }
+    }
+    
+    public void cleanup() {
+        if (driver != null) {
+            driver.quit();
+        }
+    }
+    
+    public static void main(String[] args) {
+        ReactPageWait reactWait = new ReactPageWait();
+        
+        try {
+            // Example usage
+            String url = "https://your-react-app.com";
+            String locatorType = "id";
+            String locatorValue = "app-container"; // Typical React root element ID
+            
+            boolean isPageLoaded = reactWait.waitForReactPageLoad(url, locatorType, locatorValue);
+            
+            if (isPageLoaded) {
+                System.out.println("React page loaded successfully!");
+                // Perform your actions here
+                WebElement element = reactWait.waitForElement("css", ".submit-button");
+                if (element != null) {
+                    element.click();
+                }
+            } else {
+                System.out.println("Failed to load React page");
+            }
+            
+        } finally {
+            reactWait.cleanup();
+        }
+    }
+}
