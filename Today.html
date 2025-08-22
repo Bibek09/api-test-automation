@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Point based filtering system</title>
+    <style>
+        body {
+            background-color: #06402B;
+            color: #FFDB58;
+            font-family: Verdana, Arial, sans-serif; /* Added Verdana as primary font, fallback to Arial */
+            margin: 20px;
+            font-size: small; /* Added small font size */
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #FFDB58;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #FFDB58;
+            color: #06402B;
+        }
+        select, input[type="text"], textarea {
+            background-color: #06402B;
+            color: #FFDB58;
+            border: 1px solid #FFDB58;
+            padding: 5px;
+        }
+        .wait-selected {
+            background-color: orange !important;
+        }
+        .analysis-btn {
+            background-color: orange;
+            color: #06402B;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        .analysis-btn.complete {
+            background-color: #FFDB58;
+        }
+        .highlight-green {
+            background-color: rgb(17, 133, 17) !important;
+        }
+        .highlight-orange {
+            background-color: #FFA500 !important;
+        }
+        .control-panel {
+            margin-bottom: 20px;
+        }
+        button {
+            background-color: #FFDB58;
+            color: #06402B;
+            border: none;
+            padding: 8px 16px;
+            margin: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="control-panel">
+        <button onclick="addRow()">Add Row</button>
+        <button onclick="saveData()">Save Data</button>
+       
+        <select id="sortPoints" onchange="sortTable()">
+            <option value="">Sort Points</option>
+            <option value="asc">Smallest to Largest</option>
+            <option value="desc">Largest to Smallest</option>
+        </select>
+        <button onclick="clearData()">Clear Data</button>
+    </div>
+
+    <table id="tradingTable">
+        <thead>
+            <tr>
+                <th>Ticker</th>
+                <th>Otf</th>
+                <th>Ptf</th>
+                <th>Cover</th>
+                <th>Flow</th>
+                <th>LTfx</th>
+                <th>SWGL</th>
+                <th>Structure</th>
+                <th>MoS</th>
+                <th>Points</th>
+                <th>Comments</th>
+                <th>Action</th>
+                <th>Analysis</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+    </table>
+
+    <script>
+        const pointsMap = {
+            Otf: { W: 20, D: 5, H1: 3, H2: 3, H3: 3, H4: 3, wait: 0 },
+            Ptf: { D: 10, H1: 5, H2: 3, H3: 3, H4: 3, M30: 3, M45: 3, wait: 0 },
+            Cover: { M30: 10, M15: 5, M5: 3, wait: 0 },
+            Flow: { 'M-W-D': 10, 'W-D': 5, 'D-H1': 3, wait: 0 },
+            LTfx: { D: 15, H1: 12, M5: 3, wait: 0 },
+            SWGL: { H1: 10, M15: 5, M5: 3, wait: 0 },
+            Structure: { 'Super clean': 15, 'Somewhat clean': 5, ok: 3, wait: 0 },
+            MoS: { '3R+MF': 10, '3R': 5, '2R': 3, wait: 0 }
+        };
+
+        const columnOptions = {
+            Otf: ['W', 'D', 'H1', 'H2', 'H3', 'H4', 'wait'],
+            Ptf: ['D', 'H1', 'H2', 'H3', 'H4', 'M30', 'M45', 'wait'],
+            Cover: ['M30', 'M15', 'M5', 'wait'],
+            Flow: ['M-W-D', 'W-D', 'D-H1', 'wait'],
+            LTfx: ['D', 'H1', 'M5', 'wait'],
+            SWGL: ['H1', 'M15', 'M5', 'wait'],
+            Structure: ['Super clean', 'Clean', 'Somewhat clean', 'wait'],
+            MoS: ['3R+MF', '3R', '2R', 'wait']
+        };
+
+        function createSelectOptions(options) {
+            return `<option value="">select</option>` + options.map(opt => `<option value="${opt}">${opt}</option>`).join('');
+        }
+
+        function addRow(data = {}) {
+            const tableBody = document.getElementById('tableBody');
+            if (tableBody.children.length >= 25) {
+                alert('Maximum 25 rows allowed');
+                return;
+            }
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><input type="text" value="${data.Ticker || ''}"></td>
+                <td><select onchange="updatePoints(this); highlightWait(this)">${createSelectOptions(columnOptions.Otf)}</select></td>
+                <td><select onchange="updatePoints(this); highlightWait(this)">${createSelectOptions(columnOptions.Ptf)}</select></td>
+                <td><select onchange="updatePoints(this); highlightWait(this)">${createSelectOptions(columnOptions.Cover)}</select></td>
+                <td><select onchange="updatePoints(this); highlightWait(this)">${createSelectOptions(columnOptions.Flow)}</select></td>
+                <td><select onchange="updatePoints(this); highlightWait(this)">${createSelectOptions(columnOptions.LTfx)}</select></td>
+                <td><select onchange="updatePoints(this); highlightWait(this)">${createSelectOptions(columnOptions.SWGL)}</select></td>
+                <td><select onchange="updatePoints(this); highlightWait(this)">${createSelectOptions(columnOptions.Structure)}</select></td>
+                <td><select onchange="updatePoints(this); highlightWait(this)">${createSelectOptions(columnOptions.MoS)}</select></td>
+                <td class="points">0</td>
+                <td><textarea>wait for "x" to "happen" on {} TF</textarea></td>
+                <td><button onclick="deleteRow(this)">Delete</button></td>
+                <td><button class="analysis-btn" onclick="toggleAnalysis(this)">In progress</button></td>
+            `;
+            tableBody.appendChild(row);
+            if (data) {
+                Object.keys(data).forEach(key => {
+                    if (key !== 'Points' && key !== 'Comments' && key !== 'Analysis') {
+                        const select = row.querySelector(`td:nth-child(${Object.keys(columnOptions).indexOf(key) + 2}) select`);
+                        if (select) select.value = data[key] || '';
+                        if (select && select.value === 'wait') select.parentElement.classList.add('wait-selected');
+                    } else if (key === 'Comments') {
+                        row.querySelector('textarea').value = data[key] || 'wait for "x" to "happen" on {} TF';
+                    } else if (key === 'Analysis') {
+                        const btn = row.querySelector('.analysis-btn');
+                        btn.textContent = data[key] || 'In progress';
+                        if (data[key] === 'Complete') btn.classList.add('complete');
+                    }
+                });
+                updatePoints(row.querySelector('select'));
+            }
+        }
+
+        function deleteRow(btn) {
+            btn.closest('tr').remove();
+            sortTable();
+        }
+
+        function toggleAnalysis(btn) {
+            btn.textContent = btn.textContent === 'In progress' ? 'Complete' : 'In progress';
+            btn.classList.toggle('complete');
+        }
+
+        function highlightWait(select) {
+            select.parentElement.classList.toggle('wait-selected', select.value === 'wait');
+            updatePoints(select);
+        }
+
+        function updatePoints(select) {
+            const row = select.closest('tr');
+            const selects = row.querySelectorAll('select');
+            let totalPoints = 0;
+            selects.forEach((sel, index) => {
+                const column = Object.keys(pointsMap)[index];
+                totalPoints += pointsMap[column][sel.value] || 0;
+            });
+            row.querySelector('.points').textContent = totalPoints;
+            sortTable();
+        }
+
+        function sortTable() {
+            const tableBody = document.getElementById('tableBody');
+            const sortSelect = document.getElementById('sortPoints');
+            const sortOrder = sortSelect.value;
+            const rows = Array.from(tableBody.children);
+
+            if (sortOrder) {
+                rows.sort((a, b) => {
+                    const pointsA = parseInt(a.querySelector('.points').textContent);
+                    const pointsB = parseInt(b.querySelector('.points').textContent);
+                    return sortOrder === 'asc' ? pointsA - pointsB : pointsB - pointsA;
+                });
+
+                tableBody.innerHTML = '';
+                rows.forEach((row, index) => {
+                    row.classList.remove('highlight-green', 'highlight-orange');
+                    if (sortOrder === 'desc') {
+                        if (index < 5) row.classList.add('highlight-green');
+                        else if (index < 10) row.classList.add('highlight-orange');
+                    } else if (sortOrder === 'asc') {
+                        if (index >= rows.length - 5) row.classList.add('highlight-green');
+                        else if (index >= rows.length - 10 && index < rows.length - 5) row.classList.add('highlight-orange');
+                    }
+                    tableBody.appendChild(row);
+                });
+            }
+        }
+
+        function saveData() {
+            const tableBody = document.getElementById('tableBody');
+            const data = Array.from(tableBody.children).map(row => ({
+                Ticker: row.querySelector('input[type="text"]').value,
+                Otf: row.querySelector('td:nth-child(2) select').value,
+                Ptf: row.querySelector('td:nth-child(3) select').value,
+                Cover: row.querySelector('td:nth-child(4) select').value,
+                Flow: row.querySelector('td:nth-child(5) select').value,
+                LTfx: row.querySelector('td:nth-child(6) select').value,
+                SWGL: row.querySelector('td:nth-child(7) select').value,
+                Structure: row.querySelector('td:nth-child(8) select').value,
+                MoS: row.querySelector('td:nth-child(9) select').value,
+                Points: row.querySelector('.points').textContent,
+                Comments: row.querySelector('textarea').value,
+                Analysis: row.querySelector('.analysis-btn').textContent
+            }));
+            localStorage.setItem('tradingData', JSON.stringify(data));
+            alert('Data saved!');
+        }
+
+        function clearData() {
+            localStorage.removeItem('tradingData');
+            document.getElementById('tableBody').innerHTML = '';
+            alert('Data cleared!');
+        }
+
+        function loadData() {
+            const data = JSON.parse(localStorage.getItem('tradingData') || '[]');
+            data.forEach(addRow);
+        }
+
+        window.onload = loadData;
+    </script>
+</body>
+</html>
