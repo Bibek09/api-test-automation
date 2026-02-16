@@ -377,6 +377,38 @@
             max-height: 400px; /* Reduce max height on smaller screens */
         }
     }
+    .battery {
+            width: 100px;
+            height: 40px;
+            border: 2px solid #333;
+            border-radius: 5px;
+            position: relative;
+            background-color: #fff;
+            display: inline-block;
+            margin: 10px;
+        }
+        .battery::after {
+            content: '';
+            position: absolute;
+            top: 10px;
+            right: -8px;
+            width: 6px;
+            height: 20px;
+            background-color: #333;
+            border-radius: 0 2px 2px 0;
+        }
+        .charge {
+            height: 100%;
+            background-color: #4CAF50;
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+        .charge.low {
+            background-color: #ff4d7f;
+        }
+        .charge.medium {
+            background-color: #ffcc00;
+        }
   
     </style>
 </head>
@@ -392,56 +424,57 @@
     </div>
     <div class="checklist">
         <div class="checklist-item">
-            <div class="text">Overall trend - H1 L.H.S & H4 L Op [H1 G, M15 G-P->G]</div>
+            <div class="text">Overall trend [H4 MaC+MFoS] : H1< HKGR & H4 L Op [H1 G, M15 G-P->G] Avoid<b> ranging mrkt</b></div>
             <div class="toggle-container">
                 <input id="cmn-toggle-1" class="cmn-toggle cmn-toggle-round" type="checkbox">
                 <label for="cmn-toggle-1"></label>
             </div>
         </div>
         <div class="checklist-item">
-            <div class="text">S&R: OP Zone for impulse move [Draw M15,M30,H1 O- <b>Entry</b>]</div>
+            <div class="text">S&R: <b>Vir.</b>OP Zone for impulse move [Draw 144 ,M15,M30,M45,H1-4 <b>HKGRL</b>]</div>
             <div class="toggle-container">
                 <input id="cmn-toggle-2" class="cmn-toggle cmn-toggle-round" type="checkbox">
                 <label for="cmn-toggle-2"></label>
             </div>
         </div>
         <div class="checklist-item">
-            <div class="text">OP confluence within tight range [M5/15 & M3]</div>
-            <div class="toggle-container">
-                <input id="cmn-toggle-4" class="cmn-toggle cmn-toggle-round" type="checkbox">
-                <label for="cmn-toggle-4"></label>
-            </div>
-        </div>
-        <div class="checklist-item">
-            <div class="text">OPx Trend: M1-Mpln, M5 OP(rej,white), M15 O, M30 R</div>
-            <div class="toggle-container">
-                <input id="cmn-toggle-7" class="cmn-toggle cmn-toggle-round" type="checkbox">
-                <label for="cmn-toggle-7"></label>
-            </div>
-        </div>
-        <div class="checklist-item">
-            <div class="text">HTF H1 Candle & Str aligns with LTF M5</div>
+            <div class="text">HTF H1 candle aligns with LTF & O TF retraces eg. H1(H4),D(B)|| अनुगच्छतु प्रवाहं ||</div>
             <div class="toggle-container">
                 <input id="cmn-toggle-3" class="cmn-toggle cmn-toggle-round" type="checkbox">
                 <label for="cmn-toggle-3"></label>
             </div>
         </div>
         <div class="checklist-item">
-            <div class="text">Trending below HKGR* & LTF</div>
+            <div class="text"><b>Vir.</b>OP+HKL confluence starting top tf in tight range [M30/15/5/3] below Cover M30-H1 </div>
+            <div class="toggle-container">
+                <input id="cmn-toggle-4" class="cmn-toggle cmn-toggle-round" type="checkbox">
+                <label for="cmn-toggle-4"></label>
+            </div>
+        </div>
+        <div class="checklist-item">
+            <div class="text">OPx: M1-Mpln, M5 OP(rej,white), M15 O, M30 R (O below HKG is valid)</div>
+            <div class="toggle-container">
+                <input id="cmn-toggle-7" class="cmn-toggle cmn-toggle-round" type="checkbox">
+                <label for="cmn-toggle-7"></label>
+            </div>
+        </div>
+        
+        <div class="checklist-item">
+            <div class="text">Purple confirm - SwG HL(hld/tkn) + LFR,IJ,WC + LTFx(HH,HL(swgl),LH) & O knock SwGl </div>
             <div class="toggle-container">
                 <input id="cmn-toggle-5" class="cmn-toggle cmn-toggle-round" type="checkbox">
                 <label for="cmn-toggle-5"></label>
             </div>
         </div>
         <div class="checklist-item">
-            <div class="text">LTF HKGR cross / 5 signals <b>Re-Entry</b></div>
+            <div class="text">Observe: relation btwn HKGRL & OG & Price, more deviation, ignore price move in isolation <b>mean rev</b></div>
             <div class="toggle-container">
                 <input id="cmn-toggle-6" class="cmn-toggle cmn-toggle-round" type="checkbox">
                 <label for="cmn-toggle-6"></label>
             </div>
         </div>
         <div class="checklist-item">
-            <div class="text"><b>Exit</b>: If P high is broken /Inverse O knock & Swg taken</div>
+            <div class="text"><b>Exit</b>: Any O/If P swg high is broken & LTFx /Inverse O knock & P on any TF</div>
             <div class="toggle-container">
                 <input id="cmn-toggle-8" class="cmn-toggle cmn-toggle-round" type="checkbox">
                 <label for="cmn-toggle-8"></label>
@@ -505,7 +538,16 @@
             <button type="submit">Add Trade</button>
         </form>
     </div>
-
+ <div class="battery">
+        <div class="charge" id="chargeBar"></div>
+    </div>
+    <div class="input-container">
+        <label for="batteryLevel">Cash recharge (sl):</label>
+        <input type="number" id="batteryLevel" min="0" max="25000" value="0">
+        <button onclick="updateBattery()">load</button>
+        <button onclick="clearBattery()">clean</button>
+        <label class="footer">Safe bets (FD,LQ,Bes,Efs)</label>
+    </div>
     <div class="calendar-container">
         <h2>Calendar</h2>
         <div class="month-selector">
@@ -583,10 +625,10 @@
         <h2>Lessons Word Cloud</h2>
         <div id="wordCloud" style="width: 600px; height: 400px;"></div>
     </div>
-<!-- Slider Photo Gallery -->
+<!-- Slider Photo Gallery
 <div class="slider-container">
   <div class="slider" id="slider">
-      <!-- Add your images here -->
+      Add your images here 
       <div class="slide">
           <img src="/Users/bibekkhatiwara/Downloads/olivegreentrades/Trade1.png"  alt="Fixing Entry">
       </div>
@@ -623,7 +665,7 @@
       <button onclick="prevSlide()">&#10094;</button>
       <button onclick="nextSlide()">&#10095;</button>
   </div>
-</div>
+</div> -->
     <script>
         // Lot size from your trading plan
         const LOT_SIZE = 75;
