@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Journal</title>
+    <!-- Add Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Add WordCloud2.js CDN -->
+    <script src="https://unpkg.com/wordcloud@1.2.2/src/wordcloud2.js"></script>
+    <style>
+        /* Existing styles unchanged */
+        .header {
+            background-color: #0a8b84;
+            padding: 5px 10px;
+            color: #fad326;
+            text-align: center;
+        }
+        .progress-container {
+            width: 100%;
+            background-color: #09bcb3;
+            height: 20px;
+            border-radius: 10px;
+            border-color: #2e313f;
+            overflow: hidden;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        .progress-bar {
+            height: 100%;
+            background-color: #4B0082;
+            width: 0%;
+            transition: width 0.5s ease, background-color 0.5s ease;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .progress-percentage {
+            color: #fff;
+            font-size: 12px;
+            font-weight: bold;
+            position: absolute;
+            width: 100%;
+            text-align: center;
+        }
+        input.cmn-toggle-round + label {
+            padding: 2px;
+            width: 100px;
+            height: 30px;
+            background-color: #9da9ad;
+            border-radius: 30px;
+        }
+        input.cmn-toggle-round + label:before, input.cmn-toggle-round + label:after {
+            display: block;
+            position: absolute;
+            top: 1px;
+            left: 1px;
+            bottom: 1px;
+            content: "";
+        }
+        input.cmn-toggle-round + label:before {
+            right: 1px;
+            background-color: #888;
+            border-radius: 30px;
+            transition: background 0.4s;
+        }
+        input.cmn-toggle-round + label:after {
+            width: 40px;
+            background-color: #0a8b84;
+            border-radius: 100%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            transition: margin 0.4s;
+        }
+        input.cmn-toggle-round:checked + label:before {
+            background-color: #bff49f;
+        }
+        input.cmn-toggle-round:checked + label:after {
+            margin-left: 60px;
+        }
+        .cmn-toggle {
+            position: absolute;
+            margin-left: -9999px;
+            visibility: hidden;
+        }
+        .cmn-toggle + label {
+            display: block;
+            position: relative;
+            cursor: pointer;
+            outline: none;
+            user-select: none;
+        }
+        .left {
+            width: 200px;
+            float: left;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: #0a8b84;
+            color: #fff;
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 5px;
+        }
+        .checklist {
+            background-color: #2e313f;
+            padding: 5px;
+            font-size: small;
+            color: rgb(5, 5, 5);
+            border-radius: 8px;
+            margin-top: 10px;
+            color: #fff;
+        }
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1px 0;
+        }
+        .checklist-item .text {
+            flex: 1;
+            padding-left: 5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        h1 {
+            background-color: #0a8b84;
+            text-align: center;
+            color: #fad326;
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+        .form-container {
+            font-size:smaller;
+            background: #2e313f;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #fff;
+            box-shadow: 0 2px 5px rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+            font-weight: bold;
+            color: #fff;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            background: #333;
+            color: #fff;
+            border: 1px solid #666;
+            border-radius: 4px;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #fff;
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+        }
+        input[readonly] {
+            background: #444;
+            color: #ccc;
+        }
+        .points-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .points-container input {
+            width: 100px;
+        }
+        button {
+            background: #fff;
+            color: #000;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #ccc;
+        }
+        .trade-list {
+            margin-top: 20px;
+        }
+        .trade-table {
+            font-size:smaller;
+            width: 100%;
+            border-collapse: collapse;
+            background: #1a1a1a;
+            border: 1px solid #666;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(255, 255, 255, 0.1);
+        }
+        .trade-table th, .trade-table td {
+            padding: 10px;
+            border: 1px solid #666;
+            text-align: left;
+        }
+        .trade-table th {
+            background: #2e313f;
+            color: #fff;
+            font-weight: bold;
+        }
+        .trade-table td {
+            color: #fff;
+        }
+        h2 {
+            color: #fff;
+        }
+        .calendar-container {
+            margin-top: 30px;
+            padding: 20px;
+            background: #2e313f;
+            border-radius: 8px;
+            border: 1px solid #fff;
+            font-size:smaller;
+        }
+        .stats-container {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+        }
+        .calendar-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .calendar-table th, .calendar-table td {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #666;
+        }
+        .calendar-table th {
+            background: rgb(248, 233, 121);
+            color: #000;
+        }
+        .calendar-table td {
+            background: #2e313f;
+        }
+        .calendar-table .weekly-total {
+            background: #2e313f;
+            font-weight: bold;
+        }
+        .calendar-table .monthly-total {
+            background: #fff;
+            color: #000;
+            font-weight: bold;
+        }
+        .calendar-table td.holiday {
+            background-color: rgb(116, 126, 130); /* Sky blue for holidays */
+        }
+        .clear-button-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .positive {
+            color: #ebed5e;
+        }
+        .negative {
+            color: #f9f3f4;
+        }
+        .monthlypositive {
+            color: #32eb21;
+        }
+        .monthlynegative {
+            color: #f56d84;
+        }
+        .chart-container {
+            margin-top: 30px;
+            padding: 20px;
+            background: #2e313f;
+            border-radius: 8px;
+            border: 1px solid #fff;
+        }
+        canvas {
+            max-width: 100%;
+        }
+        .projection-selector {
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .footer {
+            margin-top: 5px;
+            color: #1f2020;
+            font-size: 13px;
+        }
+        .wordcloud-container {
+            margin-top: 30px;
+            padding: 20px;
+            background: #2e313f;
+            border-radius: 8px;
+            border: 1px solid #fff;
+            text-align: center;
+        }
+        /* Add month selector styling */
+        .month-selector {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .logo {
+          position: absolute;
+          top: 5px;
+          left: 5px;
+          width: 50px; /* Adjust size as needed */
+          height: 50px;
+      }
+     /* Updated Slider Photo Gallery Styles */
+     .slider-container {
+        margin-top: 30px;
+        padding: 20px;
+        background: #000000;
+        border-radius: 8px;
+        border: 1px solid #fff;
+        position: relative;
+        overflow: hidden;
+        width: 100%;
+        max-width: 900px; /* Match the max-width of the body */
+        margin-left: auto;
+        margin-right: auto;
+    }
+    .slider {
+        display: flex;
+        transition: transform 0.5s ease-in-out;
+        width: 100%;
+    }
+    .slide {
+        min-width: 100%;
+        box-sizing: border-box;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        aspect-ratio: 16 / 9; /* Set a consistent aspect ratio for the slide */
+    }
+    .slide img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain; /* Changed to 'contain' to show the full image without cropping */
+        border-radius: 8px;
+        max-height: 400px; /* Set a maximum height to prevent overly tall images */
+    }
+    .slider-nav {
+        position: absolute;
+        top: 50%;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        transform: translateY(-50%);
+        padding: 0 10px;
+        box-sizing: border-box;
+    }
+    .slider-nav button {
+        background: rgba(0, 0, 0, 0.5);
+        color: #fff;
+        border: none;
+        padding: 10px;
+        cursor: pointer;
+        font-size: 18px;
+        border-radius: 50%;
+    }
+    .slider-nav button:hover {
+        background: rgba(0, 0, 0, 0.8);
+    }
+    /* Responsive adjustments */
+    @media (max-width: 600px) {
+        .slide {
+            aspect-ratio: 4 / 3; /* Adjust aspect ratio for smaller screens */
+        }
+        .slide img {
+            max-height: 400px; /* Reduce max height on smaller screens */
+        }
+    }
+  
+    </style>
+</head>
+<body>
+    <div id="myDIV" class="header">
+      <!--<img src="logo.png" alt="Trading Journal Logo" class="logo">!-->
+        <h2 style="margin:5px;color:#fad326">olive green A+</h2>
+    </div>
+    <div class="progress-container">
+      <div class="progress-bar" id="progressBar">
+          <span class="progress-percentage" id="progressPercentage">0%</span>
+      </div>
+    </div>
+    <div class="checklist">
+        <div class="checklist-item">
+            <div class="text">Overall trend - H1 L.H.S & H4 L Op [H1 G, M15 G-P->G]</div>
+            <div class="toggle-container">
+                <input id="cmn-toggle-1" class="cmn-toggle cmn-toggle-round" type="checkbox">
+                <label for="cmn-toggle-1"></label>
+            </div>
+        </div>
+        <div class="checklist-item">
+            <div class="text">S&R: OP Zone for impulse move [Draw M15,M30,H1 O- <b>Entry</b>]</div>
+            <div class="toggle-container">
+                <input id="cmn-toggle-2" class="cmn-toggle cmn-toggle-round" type="checkbox">
+                <label for="cmn-toggle-2"></label>
+            </div>
+        </div>
+        <div class="checklist-item">
+            <div class="text">OP confluence within tight range [M5/15 & M3]</div>
+            <div class="toggle-container">
+                <input id="cmn-toggle-4" class="cmn-toggle cmn-toggle-round" type="checkbox">
+                <label for="cmn-toggle-4"></label>
+            </div>
+        </div>
+        <div class="checklist-item">
+            <div class="text">OPx Trend: M1-Mpln, M5 OP(rej,white), M15 O, M30 R</div>
+            <div class="toggle-container">
+                <input id="cmn-toggle-7" class="cmn-toggle cmn-toggle-round" type="checkbox">
+                <label for="cmn-toggle-7"></label>
+            </div>
+        </div>
+        <div class="checklist-item">
+            <div class="text">HTF H1 Candle & Str aligns with LTF M5</div>
+            <div class="toggle-container">
+                <input id="cmn-toggle-3" class="cmn-toggle cmn-toggle-round" type="checkbox">
+                <label for="cmn-toggle-3"></label>
+            </div>
+        </div>
+        <div class="checklist-item">
+            <div class="text">Trending below HKGR* & LTF</div>
+            <div class="toggle-container">
+                <input id="cmn-toggle-5" class="cmn-toggle cmn-toggle-round" type="checkbox">
+                <label for="cmn-toggle-5"></label>
+            </div>
+        </div>
+        <div class="checklist-item">
+            <div class="text">LTF HKGR cross / 5 signals <b>Re-Entry</b></div>
+            <div class="toggle-container">
+                <input id="cmn-toggle-6" class="cmn-toggle cmn-toggle-round" type="checkbox">
+                <label for="cmn-toggle-6"></label>
+            </div>
+        </div>
+        <div class="checklist-item">
+            <div class="text"><b>Exit</b>: If P high is broken /Inverse O knock & Swg taken</div>
+            <div class="toggle-container">
+                <input id="cmn-toggle-8" class="cmn-toggle cmn-toggle-round" type="checkbox">
+                <label for="cmn-toggle-8"></label>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <span>Next 10 days: Fix your entry-Limit, Put generous SL, let it play [-31.5k]</span>
+    </div>
+
+    <div class="form-container">
+        <form id="tradeForm">
+
+            <div>
+                <label for="sl">Enter Stop Loss (SL) in points:</label>
+                <input type="number" id="sl" min="1" step="0.1" onchange="calculatePosition()">
+                <div id="result">
+                    <p>Position Size: <span id="positionSize">0</span> lot(s) || Expected Loss: <span id="expectedLoss">0</span> rupees</p>
+                    
+                </div>
+            </div>
+            <label for="date">Date:</label>
+            <input type="date" id="date" required>
+
+            <label for="time">Time of Entry:</label>
+            <input type="time" id="time" required>
+
+            <label for="entryPrice">Entry Price:</label>
+            <input type="number" id="entryPrice" step="0.01" required placeholder="e.g., 24030">
+
+            <label for="stopLoss">Stop-Loss:</label>
+            <input type="number" id="stopLoss" step="0.01" required placeholder="e.g., 23985">
+
+            <label for="takeProfit">Take-Profit:</label>
+            <input type="number" id="takeProfit" step="0.01" required placeholder="e.g., 24125">
+
+            <label for="outcome">Outcome:</label>
+            <select id="outcome" required>
+                <option value="">Select Outcome</option>
+                <option value="Win">Win</option>
+                <option value="Loss">Loss</option>
+                <option value="Breakeven">Breakeven</option>
+            </select>
+
+            <label for="outcomeAmount">Outcome Amount:</label>
+            <input type="number" id="outcomeAmount" step="0.01" readonly placeholder="Calculated">
+
+            <label for="pointsAllocated">Points Allocated:</label>
+            <div class="points-container">
+                <input type="number" id="pointsAllocated" step="1" min="0" required placeholder="e.g., 50">
+                <span id="pointsRemaining">Remaining: 350/350</span>
+            </div>
+
+            <label for="emotion">Emotion:</label>
+            <input type="text" id="emotion" required placeholder="e.g., Calm, Anxious">
+
+            <label for="lesson">Lesson:</label>
+            <textarea id="lesson" rows="3" required placeholder="e.g., Waited for confirmation, M15O M5P,M5O M3P"></textarea>
+
+            <button type="submit">Add Trade</button>
+        </form>
+    </div>
+
+    <div class="calendar-container">
+        <h2>Calendar</h2>
+        <div class="month-selector">
+            <label for="monthSelect">Select Month:</label>
+            <select id="monthSelect" onchange="updateCalendar()">
+                <option value="0">January</option>
+                <option value="1">February</option>
+                <option value="2">March</option>
+                <option value="3">April</option>
+                <option value="4">May</option>
+                <option value="5">June</option>
+                <option value="6">July</option>
+                <option value="7">August</option>
+                <option value="8">September</option>
+                <option value="9">October</option>
+                <option value="10">November</option>
+                <option value="11">December</option>
+            </select>
+        </div>
+        <div class="stats-container" id="statsContainer">
+            <!-- Stats will be populated here -->
+        </div>
+        <table class="calendar-table" id="tradeCalendar">
+            <!-- Calendar populated by JavaScript -->
+        </table>
+    </div>
+
+    <div class="chart-container">
+        <h2>Projected Returns</h2>
+        <div class="projection-selector">
+            <label for="projectionPeriod">Period:</label>
+            <select id="projectionPeriod" onchange="updateChart()">
+                <option value="12">12 Months</option>
+                <option value="24">24 Months</option>
+                <option value="36">36 Months</option>
+            </select>
+        </div>
+        <canvas id="returnsChart"></canvas>
+    </div>
+
+    <div class="trade-list" id="tradeList">
+        <h2>Trade Log</h2>
+        <table class="trade-table" id="tradeTable">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Entry Price</th>
+                    <th>Stop-Loss</th>
+                    <th>Take-Profit</th>
+                    <th>Outcome</th>
+                    <th>Amount</th>
+                    <th>Points Allocated</th>
+                    <th>Emotion</th>
+                    <th>Lesson</th>
+                </tr>
+            </thead>
+            <tbody id="tradeTableBody">
+                <!-- Trades will be populated here -->
+            </tbody>
+        </table>
+    </div>
+    <!-- <video width="100%" height="100%" controls>
+      <source src="/Users/bibekkhatiwara/Downloads/OliveGreen.mp4" type="video/mp4">
+      Your browser does not support the video tag.
+    </video> -->
+
+    <div class="clear-button-container">
+        <button type="button" onclick="clearTrades()">Clear All Trades</button>
+    </div>
+
+    <!-- Word Cloud Container -->
+    <div class="wordcloud-container">
+        <h2>Lessons Word Cloud</h2>
+        <div id="wordCloud" style="width: 600px; height: 400px;"></div>
+    </div>
+<!-- Slider Photo Gallery -->
+<div class="slider-container">
+  <div class="slider" id="slider">
+      <!-- Add your images here -->
+      <div class="slide">
+          <img src="/Users/bibekkhatiwara/Downloads/olivegreentrades/Trade1.png"  alt="Fixing Entry">
+      </div>
+      <div class="slide">
+        <img src="/Users/bibekkhatiwara/Downloads/olivegreentrades/Trade2.png" >
+      </div>
+      <div class="slide">
+        <img src="/Users/bibekkhatiwara/Downloads/olivegreentrades/Trade3.png" >
+      </div>
+      <div class="slide">
+        <img src="/Users/bibekkhatiwara/Downloads/olivegreentrades/Trade4.png" >
+      </div>
+      <div class="slide">
+        <img src="/Users/bibekkhatiwara/Downloads/olivegreentrades/Trade5.png" >
+      </div>
+      <div class="slide">
+        <img src="/Users/bibekkhatiwara/Downloads/olivegreentrades/Trade6.png" >
+      </div>
+      <div class="slide">
+        <img src="/Users/bibekkhatiwara/Downloads/olivegreentrades/Trade7.png" >
+      </div>
+      <div class="slide">
+        <img src="/Users/bibekkhatiwara/Downloads/olivegreentrades/Trade8.png" >
+      </div>
+      <div class="slide">
+        <img src="/Users/bibekkhatiwara/Downloads/olivegreentrades/Trade9.png" >
+      </div>
+      <div class="slide">
+        <img src="/Users/bibekkhatiwara/Downloads/olivegreentrades/Trade10.png" >
+      </div>
+
+  </div>
+  <div class="slider-nav">
+      <button onclick="prevSlide()">&#10094;</button>
+      <button onclick="nextSlide()">&#10095;</button>
+  </div>
+</div>
+    <script>
+        // Lot size from your trading plan
+        const LOT_SIZE = 75;
+        const TOTAL_POINTS = 350;
+
+        // Load trades from localStorage or initialize empty array
+        let trades = JSON.parse(localStorage.getItem('trades')) || [];
+
+        // Chart variable
+        let returnsChart;
+
+        // Sample NSE Holiday List for 2025 (adjust based on official NSE data)
+        const nseHolidays2025 = [
+                "2026-01-26", // Republic day
+                "2026-03-03", // Holi
+                "2026-03-26", // Ramnvawami
+                "2025-03-31", // Shri Mahavir Jayanti
+                "2026-04-03", // Good Friday
+                "2025-04-14", // Dr. Baba Saheb Ambedkar Jayanti
+                "2025-05-01", // Maharashtra Day
+                "2025-05-28", // Eid
+                "2025-06-26", // muraram
+                "2025-09-14", // Ganesh chaturthi
+                "2025-10-02", // MG
+                "2025-10-20", // Dasai
+                "2025-11-10", // Tihar
+                "2025-11-24",  // guru nanak j
+                "2025-11-24"  // Christmas
+        ];
+
+        // Display trades and update UI on page load
+        displayTrades();
+        updateCalendar();
+        updateChart();
+        updatePointsProgress();
+        updateWordCloud();
+
+        // Set default month to March 2025 (month index 2)
+        document.getElementById('monthSelect').value = 2;
+
+        // Clear trades function
+        function clearTrades() {
+            trades = [];
+            localStorage.removeItem('trades');
+            displayTrades();
+            updateCalendar();
+            updateChart();
+            updatePointsProgress();
+            updateWordCloud();
+        }
+        //Calculate position size
+            function calculatePosition() {
+                // Constants
+                const RISK_PER_LOT = 75;    // 75 points per lot
+                const MAX_RISK = 3750;      // Maximum risk in rupees
+                
+                // Get SL value from input
+                const sl = parseFloat(document.getElementById('sl').value);
+                
+                if (!sl || sl <= 0) {
+                    document.getElementById('positionSize').textContent = '0';
+                    document.getElementById('expectedLoss').textContent = '0';
+                    return;
+                }
+
+                // Calculate position size
+                // positionSize = MAX_RISK / (SL * RISK_PER_LOT)
+                const positionSize = MAX_RISK / (sl * RISK_PER_LOT);
+                const roundedPosition = Math.floor(positionSize * 100) / 100; // Round to 2 decimal places
+                
+                // Calculate actual expected loss
+                const expectedLoss = roundedPosition * sl * RISK_PER_LOT;
+
+                // Update display
+                document.getElementById('positionSize').textContent = roundedPosition.toFixed(2);
+                document.getElementById('expectedLoss').textContent = expectedLoss.toFixed(2);
+            }
+        // Update points progress bar and remaining label
+        function updatePointsProgress() {
+            const totalAllocated = trades.reduce((sum, trade) => sum + trade.pointsAllocated, 0);
+            const remainingPoints = TOTAL_POINTS - totalAllocated;
+            const percentage = (totalAllocated / TOTAL_POINTS) * 100;
+
+            const progressBar = document.getElementById('progressBar');
+            const progressPercentage = document.getElementById('progressPercentage');
+            progressBar.style.width = `${percentage}%`;
+            progressPercentage.textContent = `${percentage.toFixed(0)}%`;
+
+            if (percentage >= 80) {
+                progressBar.style.backgroundColor = '#E75480';
+            } else if (percentage >= 50) {
+                progressBar.style.backgroundColor = '#FFA500';
+            } else {
+                progressBar.style.backgroundColor = '#C154C1';
+            }
+
+            const pointsRemainingLabel = document.getElementById('pointsRemaining');
+            pointsRemainingLabel.textContent = `Remaining: ${remainingPoints}/${TOTAL_POINTS}`;
+        }
+
+        // Handle form submission
+        document.getElementById('tradeForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const entryPrice = parseFloat(document.getElementById('entryPrice').value);
+            const stopLoss = parseFloat(document.getElementById('stopLoss').value);
+            const takeProfit = parseFloat(document.getElementById('takeProfit').value);
+            const outcome = document.getElementById('outcome').value;
+
+            let outcomeAmount;
+            if (outcome === 'Win') {
+                outcomeAmount = (takeProfit - entryPrice) * LOT_SIZE;
+            } else if (outcome === 'Loss') {
+                outcomeAmount = (stopLoss - entryPrice) * LOT_SIZE;
+            } else {
+                outcomeAmount = 0;
+            }
+
+            const trade = {
+                date: document.getElementById('date').value,
+                time: document.getElementById('time').value,
+                entryPrice: entryPrice,
+                stopLoss: stopLoss,
+                takeProfit: takeProfit,
+                outcome: outcome,
+                outcomeAmount: outcomeAmount,
+                pointsAllocated: parseInt(document.getElementById('pointsAllocated').value) || 0,
+                emotion: document.getElementById('emotion').value,
+                lesson: document.getElementById('lesson').value
+            };
+
+            trades.push(trade);
+            localStorage.setItem('trades', JSON.stringify(trades));
+            displayTrades();
+            updateCalendar();
+            updateChart();
+            updatePointsProgress();
+            updateWordCloud();
+            this.reset();
+        });
+
+        // Update outcome amount preview
+        document.getElementById('outcome').addEventListener('change', function() {
+            const entryPrice = parseFloat(document.getElementById('entryPrice').value) || 0;
+            const stopLoss = parseFloat(document.getElementById('stopLoss').value) || 0;
+            const takeProfit = parseFloat(document.getElementById('takeProfit').value) || 0;
+            const outcome = this.value;
+            let outcomeAmount;
+
+            if (outcome === 'Win') {
+                outcomeAmount = (takeProfit - entryPrice) * LOT_SIZE;
+            } else if (outcome === 'Loss') {
+                outcomeAmount = (stopLoss - entryPrice) * LOT_SIZE;
+            } else {
+                outcomeAmount = 0;
+            }
+
+            document.getElementById('outcomeAmount').value = outcomeAmount.toFixed(2);
+        });
+
+        // Display trade entries in table format
+        function displayTrades() {
+            const tradeTableBody = document.getElementById('tradeTableBody');
+            tradeTableBody.innerHTML = '';
+
+            trades.forEach((trade, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${new Date(trade.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</td>
+                    <td>${trade.time} IST</td>
+                    <td>${trade.entryPrice.toFixed(2)}</td>
+                    <td>${trade.stopLoss.toFixed(2)}</td>
+                    <td>${trade.takeProfit.toFixed(2)}</td>
+                    <td>${trade.outcome}</td>
+                    <td class="${trade.outcomeAmount >= 0 ? 'positive' : 'negative'}">${trade.outcomeAmount.toFixed(2)}</td>
+                    <td>${trade.pointsAllocated}</td>
+                    <td>${trade.emotion}</td>
+                    <td>${trade.lesson}</td>
+                `;
+                tradeTableBody.appendChild(row);
+            });
+        }
+
+        // Function to calculate win rate
+        function calculateWinRate() {
+            if (trades.length === 0) return '0%';
+            const wins = trades.filter(trade => trade.outcome === 'Win').length;
+            return ((wins / trades.length) * 100).toFixed(2) + '%';
+        }
+
+        // Function to calculate average Risk-Reward ratio
+        function calculateRiskReward() {
+            if (trades.length === 0) return '0:0';
+            let totalRisk = 0;
+            let totalReward = 0;
+            let validTrades = 0;
+
+            trades.forEach(trade => {
+                const risk = Math.abs(trade.entryPrice - trade.stopLoss);
+                const reward = Math.abs(trade.takeProfit - trade.entryPrice);
+                if (risk > 0) {
+                    totalRisk += risk;
+                    totalReward += reward;
+                    validTrades++;
+                }
+            });
+
+            if (validTrades === 0) return '0:0';
+            const avgRisk = totalRisk / validTrades;
+            const avgReward = totalReward / validTrades;
+            const ratio = avgReward / avgRisk;
+            return `1:${ratio.toFixed(2)}`;
+        }
+
+        // Update trade calendar with colored P&L and stats
+        function updateCalendar() {
+            const calendar = document.getElementById('tradeCalendar');
+            const statsContainer = document.getElementById('statsContainer');
+            calendar.innerHTML = '';
+
+            const selectedMonth = parseInt(document.getElementById('monthSelect').value);
+            const year = 2025; // Fixed year based on current date (March 14, 2025)
+            const daysInMonth = new Date(year, selectedMonth + 1, 0).getDate();
+            const firstDay = new Date(year, selectedMonth, 1).getDay();
+
+            const dailyPnL = {};
+            trades.forEach(trade => {
+                const date = trade.date;
+                dailyPnL[date] = (dailyPnL[date] || 0) + trade.outcomeAmount;
+            });
+
+            const monthlyPnL = Object.entries(dailyPnL)
+                .filter(([date]) => new Date(date).getMonth() === selectedMonth && new Date(date).getFullYear() === year)
+                .reduce((sum, [, pnl]) => sum + pnl, 0);
+
+            statsContainer.innerHTML = `
+                <div>Monthly P&L: <span class="${monthlyPnL >= 0 ? 'monthlypositive' : 'monthlynegative'}">${monthlyPnL.toFixed(2)}</span></div>
+                <div>Win Rate: ${calculateWinRate()}</div>
+                <div>Avg R:R: ${calculateRiskReward()}</div>
+            `;
+
+            const table = document.createElement('table');
+            table.classList.add('calendar-table');
+
+            const daysRow = document.createElement('tr');
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'P&L'];
+            days.forEach(day => {
+                const th = document.createElement('th');
+                th.textContent = day;
+                daysRow.appendChild(th);
+            });
+            table.appendChild(daysRow);
+
+            let currentRow = document.createElement('tr');
+            let weeklyPnL = 0;
+            for (let i = 0; i < firstDay; i++) {
+                currentRow.appendChild(document.createElement('td'));
+            }
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateStr = `${year}-${String(selectedMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const td = document.createElement('td');
+                const pnl = dailyPnL[dateStr] || 0;
+                td.innerHTML = `${day}<br><span class="${pnl > 0 ? 'positive' : 'negative'}">${pnl.toFixed(2)}</span>`;
+                weeklyPnL += pnl;
+
+                // Mark holidays
+                if (nseHolidays2025.includes(dateStr)) {
+                    td.classList.add('holiday');
+                }
+
+                currentRow.appendChild(td);
+
+                if ((firstDay + day) % 7 === 0 || day === daysInMonth) {
+                    const weeklyTd = document.createElement('td');
+                    weeklyTd.innerHTML = `<span class="${weeklyPnL > 0 ? 'positive' : 'negative'}">${weeklyPnL.toFixed(2)}</span>`;
+                    weeklyTd.classList.add('weekly-total');
+                    currentRow.appendChild(weeklyTd);
+                    table.appendChild(currentRow);
+                    currentRow = document.createElement('tr');
+                    weeklyPnL = 0;
+                }
+            }
+
+            calendar.appendChild(table);
+        }
+
+        // Function to calculate projected returns and update chart
+        function updateChart() {
+            const ctx = document.getElementById('returnsChart').getContext('2d');
+            const winRate = parseFloat(calculateWinRate()) / 100 || 0;
+            const riskRewardStr = calculateRiskReward().split(':')[1];
+            const riskReward = parseFloat(riskRewardStr) || 0;
+            const projectionPeriod = parseInt(document.getElementById('projectionPeriod').value) || 12;
+
+            const initialCapital = 236000;
+            const tradesPerMonth = 20;
+            let returns = [initialCapital];
+
+            const winReturn = riskReward;
+            const lossReturn = -1;
+            const expectedReturnPerTrade = (winRate * winReturn) + ((1 - winRate) * lossReturn);
+
+            for (let month = 1; month <= projectionPeriod; month++) {
+                const monthlyReturn = expectedReturnPerTrade * tradesPerMonth * (initialCapital * 0.01);
+                returns.push(returns[month - 1] + monthlyReturn);
+            }
+
+            const months = ['Month 0'];
+            const today = new Date();
+            for (let i = 0; i < projectionPeriod; i++) {
+                const date = new Date(today.getFullYear(), today.getMonth() + i, 1);
+                months.push(date.toLocaleString('default', { month: 'short', year: 'numeric' }));
+            }
+
+            if (returnsChart) {
+                returnsChart.destroy();
+            }
+
+            returnsChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: months,
+                    datasets: [{
+                        label: 'Projected Capital',
+                        data: returns,
+                        borderColor: '#83e283',
+                        backgroundColor: 'rgba(131, 226, 131, 0.2)',
+                        fill: true,
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            title: {
+                                display: true,
+                                text: 'Capital (₹)',
+                                color: '#fff'
+                            },
+                            ticks: {
+                                color: '#fff'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Months',
+                                color: '#fff'
+                            },
+                            ticks: {
+                                color: '#fff'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#fff'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Function to update the word cloud
+        function updateWordCloud() {
+            const wordCloudDiv = document.getElementById('wordCloud');
+            if (!wordCloudDiv) return;
+
+            const lessons = trades.map(trade => trade.lesson).join(' ');
+            const words = lessons.toLowerCase().split(/\s+/).filter(word => word.length > 2); // Ignore short words
+            const wordFreq = {};
+            words.forEach(word => {
+                wordFreq[word] = (wordFreq[word] || 0) + 1;
+            });
+            const wordList = Object.entries(wordFreq);
+
+            wordCloudDiv.innerHTML = ''; // Clear previous word cloud
+
+            WordCloud(wordCloudDiv, {
+                list: wordList,
+                gridSize: 10,
+                weightFactor: 20,
+                fontFamily: 'Arial',
+                color: 'random-dark',
+                backgroundColor: '#FFFFE4',
+                rotateRatio: 0.5,
+                shuffle: true,
+                drawOutOfBound: false
+            });
+        }
+        // Slider Photo Gallery JavaScript
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+
+        function showSlide(index) {
+            if (index >= totalSlides) {
+                currentSlide = 0;
+            } else if (index < 0) {
+                currentSlide = totalSlides - 1;
+            } else {
+                currentSlide = index;
+            }
+            const slider = document.getElementById('slider');
+            slider.style.transform = `translateX(-${currentSlide * 100}%)`;
+        }
+
+        function nextSlide() {
+            showSlide(currentSlide + 1);
+        }
+
+        function prevSlide() {
+            showSlide(currentSlide - 1);
+        }
+
+        // Auto-slide every 5 seconds
+        setInterval(() => {
+            nextSlide();
+        }, 7000);
+
+        // Initialize the slider
+        showSlide(currentSlide);
+    </script>
+</body>
+</html>
