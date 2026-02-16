@@ -1100,6 +1100,58 @@
 
         // Initialize the slider
         showSlide(currentSlide);
+
+        function setBatteryLevel(value) {
+            const chargeBar = document.getElementById('chargeBar');
+            // Ensure value is between 0 and 25000
+            value = Math.max(0, Math.min(25000, value));
+            // Calculate percentage for display (0-100%)
+            const percentage = (value / 25000) * 100;
+            chargeBar.style.width = `${percentage}%`;
+        
+            // Remove all classes
+            chargeBar.className = 'charge';
+        
+            // Add appropriate class based on value
+            if (value < 10000) {
+                chargeBar.classList.add('low'); // Red for value < 10000
+            } else if (value >= 10000 && value < 20000) {
+                chargeBar.classList.add('medium'); // Orange for 10000 < value < 20000
+            } 
+        
+            // Save to local storage
+            localStorage.setItem('batteryLevel', value);
+            
+            // Update input field to reflect current battery level
+            document.getElementById('batteryLevel').value = '';
+            return value; // Return the new value for use in updateBattery
+        }
+        
+        function updateBattery() {
+            const input = document.getElementById('batteryLevel');
+            const inputValue = parseInt(input.value);
+            if (!isNaN(inputValue)) {
+                // Get current battery level from localStorage or default to 6250
+                const currentLevel = parseInt(localStorage.getItem('batteryLevel')) || 0;
+                // Add or subtract the input value
+                const newLevel = currentLevel + inputValue;
+                // Update battery level
+                setBatteryLevel(newLevel);
+            }
+        }
+
+        function clearBattery() {
+            // Set battery level to 0
+            setBatteryLevel(0);
+        }
+
+        // Load saved battery level from local storage or use default
+        function loadBatteryLevel() {
+            const savedLevel = localStorage.getItem('batteryLevel');
+            const initialLevel = savedLevel !== null ? parseInt(savedLevel) : 6250;
+            document.getElementById('batteryLevel').value = '';
+            setBatteryLevel(initialLevel);
+        }
     </script>
 </body>
 </html>
