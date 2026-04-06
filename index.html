@@ -417,7 +417,64 @@
             padding: 5px;
             font-size: 16px;
         }
-  
+  .checklist-item {
+      display: flex;
+      align-items: center;
+      background: #2a2a3a;
+      padding: 14px 20px;
+      border-radius: 10px;
+      max-width: 620px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    }
+
+    .text {
+      font-size: 15.5px;
+      font-weight: 500;
+      flex: 1;
+    }
+
+    .selector-container {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+
+    select {
+      background: #36364a;
+      color: #eee;
+      border: 1px solid #555;
+      border-radius: 6px;
+      padding: 7px 12px;
+      font-size: 14px;
+      cursor: pointer;
+      outline: none;
+      min-width: 110px;
+    }
+
+    select:focus {
+      border-color: #4ade80;
+    }
+
+    .labels {
+      display: flex;
+      gap: 20px;
+      font-size: 14.5px;
+    }
+
+    .label-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .label-item span:first-child {
+      color: #aaa;
+    }
+
+    .label-item span:last-child {
+      color: #4ade80;
+      font-weight: 600;
+    }
     </style>
 </head>
 <body>
