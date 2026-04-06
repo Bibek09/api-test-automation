@@ -10,6 +10,7 @@
     <script src="https://unpkg.com/wordcloud@1.2.2/src/wordcloud2.js"></script>
     <style>
         /* Existing styles unchanged */
+        
         .header {
             background-color: #0a8b84;
             padding: 5px 10px;
@@ -417,6 +418,13 @@
             padding: 5px;
             font-size: 16px;
         }
+            body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #1e1e2e;
+      color: #ddd;
+      padding: 40px;
+      margin: 0;
+    }
   .checklist-item {
       display: flex;
       align-items: center;
@@ -495,8 +503,9 @@
                 <label for="cmn-toggle-1"></label>
             </div>
         </div>
-        <div class="checklist-item">
-    <div class="text">O: Clean Pullback</div>
+
+ <div class="checklist-item">
+    <div class="text">TF: Confirmation</div>
     
     <div class="selector-container">
       <select id="tfSelector">
@@ -525,6 +534,7 @@
       </div>
     </div>
   </div>
+        
         <div class="checklist-item">
             <div class="text">O: Clean Pullback</div>
             <div class="toggle-container">
@@ -1233,7 +1243,7 @@
             document.getElementById('batteryLevel').value = '';
             setBatteryLevel(initialLevel);
         }
-        const tfSelector = document.getElementById('tfSelector');
+     const tfSelector = document.getElementById('tfSelector');
     const ptfValue = document.getElementById('ptfValue');
     const pxtfValue = document.getElementById('pxtfValue');
 
@@ -1245,6 +1255,7 @@
       "H2":   { ptf: "M30", pxtf: "M5" },
       "H1":   { ptf: "M15", pxtf: "M3" },
       "M30":  { ptf: "M5",  pxtf: "M1" },
+      "M45":  { ptf: "M15",  pxtf: "M5" },
       "M15":  { ptf: "M3",  pxtf: "M1" },
       "M5":   { ptf: "M1",  pxtf: "M1" }
     };
@@ -1256,8 +1267,8 @@
         pxtfValue.textContent = mapping[selected].pxtf;
       } else {
         // Default for "Olive TF"
-        ptfValue.textContent = "W";
-        pxtfValue.textContent = "D";
+        ptfValue.textContent = "";
+        pxtfValue.textContent = "";
       }
     }
 
