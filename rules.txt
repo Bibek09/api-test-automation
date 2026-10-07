@@ -1,0 +1,13 @@
+ok lets go and create for daily
+
+name: Daily Triple Confirmation Breakdown
+timeframe: D
+match: all
+conditions: 
+TR === short, H>O or  H>Y or L<Y
+The difference between O and P is greater than zero
+subrules:
+H>P  in H2 timeframe
+O<P , H>P or H>O or H>B  in H30 timeframe
+O<P and P<B  in M5 timeframe
+The difference between O and P is greater than zero in m5 timeframe
