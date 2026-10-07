@@ -1,0 +1,61 @@
+{
+  "name": "Daily Triple Confirmation Breakdown",
+  "timeframe": "D",
+  "match": "all",
+  "conditions": [
+    { "left": "TR", "operator": "===", "right": "short" },
+    {
+      "logical": "or",
+      "conditions": [
+        { "left": "H", "operator": ">", "right": "O" },
+        { "left": "H", "operator": ">", "right": "Y" },
+        { "left": "L", "operator": "<", "right": "Y" }
+      ]
+    },
+    {
+      "left": "O",
+      "operator": ">",
+      "right": "P",
+      "calculate": { "expression": "left - right", "threshold": 0 }
+    }
+  ],
+  "sub_rules": [
+    {
+      "name": "H2 Strategy Matched",
+      "match": "all",
+      "conditions": [
+        { "left": "H", "operator": ">", "right": "P", "cross_timeframe": "H2" }
+      ]
+    },
+    {
+      "name": "H30 Strategy Matched",
+      "match": "all",
+      "conditions": [
+        { "left": "O", "operator": "<", "right": "P", "cross_timeframe": "H30" },
+        {
+          "logical": "or",
+          "conditions": [
+            { "left": "H", "operator": ">", "right": "P", "cross_timeframe": "H30" },
+            { "left": "H", "operator": ">", "right": "O", "cross_timeframe": "H30" },
+            { "left": "H", "operator": ">", "right": "B", "cross_timeframe": "H30" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "M5 Strategy Matched",
+      "match": "all",
+      "conditions": [
+        { "left": "O", "operator": "<", "right": "P", "cross_timeframe": "M5" },
+        { "left": "P", "operator": "<", "right": "B", "cross_timeframe": "M5" },
+        {
+          "left": "O",
+          "operator": ">",
+          "right": "P",
+          "cross_timeframe": "M5",
+          "calculate": { "expression": "left - right", "threshold": 0 }
+        }
+      ]
+    }
+  ]
+}
