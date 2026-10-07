@@ -1,0 +1,115 @@
+
+1. M30 Core Macro Strategies
+
+name: M30 Long when OP taken
+timeframe: M30
+match: all
+conditions:
+TR === long, H>O
+subrules:
+H>P in M5 timeframe
+OP, H>P in M1 timeframe
+The difference between O and P is greater than 15 in M1 timeframe
+name: M30 Long when OP held
+timeframe: M30
+match: all
+conditions:
+TR === long, H>O
+subrules:
+H>P in M5 timeframe
+O>P in M3 timeframe
+O>P, H>P in M1 timeframe
+The difference between O and P is greater than 15 in M1 timeframe
+name: M30 Short when OP taken
+timeframe: M30
+match: all
+conditions:
+TR === short, H>O
+subrules:
+H>P in M5 timeframe
+OO, O<P, P<B, Y<O in M1 timeframe
+The difference between O and P is less than 0 in M1 timeframe
+name: M30 Short when OP held
+timeframe: M30
+match: all
+conditions:
+TR === short, H>O
+subrules:
+H>P in M5 timeframe
+O>P in M3 timeframe
+H>O, O<P, P<B, Y<O in M1 timeframe
+The difference between O and P is less than 0 in M1 timeframe
+
+📂 2. M15 Core Scalping Strategies
+
+name: M15 Long when OP taken
+timeframe: M15
+match: all
+conditions:
+TR === long, H>O
+subrules:
+OP, H>P in M1 timeframe
+The difference between O and P is greater than 15 in M1 timeframe
+name: M15 Long when OP held
+timeframe: M15
+match: all
+conditions:
+TR === long, H>O
+subrules:
+O>P in M3 timeframe
+O>P, H>P in M1 timeframe
+The difference between O and P is greater than 15 in M1 timeframe
+name: M15 Short when OP taken
+timeframe: M15
+match: all
+conditions:
+TR === short, H>O
+subrules:
+OO, O<P, P<B, Y<O in M1 timeframe
+The difference between O and P is less than 0 in M1 timeframe
+name: M15 Short when OP held
+timeframe: M15
+match: all
+conditions:
+TR === short, H>O
+subrules:
+O>P in M3 timeframe
+H>O, O<P, P<B, Y<O in M1 timeframe
+The difference between O and P is less than 0 in M1 timeframe
+
+📂 3. M5 Core Micro-Scalping Strategies
+
+name: M5 Long when OP taken
+timeframe: M5
+match: all
+conditions:
+TR === long, H>O
+subrules:
+OP, H>P in M1 timeframe
+The difference between O and P is greater than 15 in M1 timeframe
+name: M5 Long when OP held
+timeframe: M5
+match: all
+conditions:
+TR === long, H>O
+subrules:
+O>P in M3 timeframe
+O>P, H>P in M1 timeframe
+The difference between O and P is greater than 15 in M1 timeframe
+name: M5 Short when OP taken
+timeframe: M5
+match: all
+conditions:
+TR === short, H>O
+subrules:
+OO, O<P, P<B, Y<O in M1 timeframe
+The difference between O and P is less than 0 in M1 timeframe
+name: M5 Short when OP held
+timeframe: M5
+match: all
+conditions:
+TR === short, H>O
+subrules:
+O>P in M3 timeframe
+H>O, O<P, P<B, Y<O in M1 timeframe
+The difference between O and P is less than 0 in M1 timeframe
